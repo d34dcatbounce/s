@@ -3,78 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>데이터 입력 및 목록 웹사이트</title>
+    <title>데이터 입력 및 목록</title>
     <style>
+        /* 모바일 및 PC 반응형 기본 스타일 */
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             margin: 0;
-            padding: 40px;
+            padding: 15px;
             background-color: #f4f7f6;
+            color: #333;
         }
+        
         .container {
             display: flex;
+            flex-direction: column; /* 모바일: 세로 배치 */
             gap: 20px;
-            max-width: 1200px;
+            max-width: 1000px;
             margin: 0 auto;
+        }
+
+        /* 화면이 넓어지면(PC) 가로 배치로 변경 */
+        @media (min-width: 768px) {
+            .container {
+                flex-direction: row;
+            }
+            .left-panel, .right-panel {
+                flex: 1;
+            }
+        }
+
+        .left-panel, .right-panel {
             background: white;
             padding: 20px;
             border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
-        .left-panel, .right-panel {
-            flex: 1;
-            padding: 20px;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            background-color: #fafafa;
-        }
+
         h2 {
             margin-top: 0;
-            border-bottom: 2px solid #333;
+            font-size: 1.2rem;
+            border-bottom: 2px solid #2c3e50;
             padding-bottom: 10px;
+            margin-bottom: 15px;
         }
+
+        /* 왼쪽 리스트 영역 스타일 (제목 누르면 본문 나옴) */
+        #list-container {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        
+        details {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            padding: 12px 15px;
+            transition: all 0.2s ease;
+        }
+        
+        summary {
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            list-style: none;
+            outline: none;
+            word-break: keep-all;
+        }
+        
+        summary::-webkit-details-marker {
+            display: none;
+        }
+        
+        summary::before {
+            content: "➕ ";
+            font-size: 0.8em;
+            margin-right: 5px;
+        }
+        
+        details[open] summary::before {
+            content: "➖ ";
+        }
+        
+        .content-body {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px dashed #cbd5e1;
+            color: #475569;
+            line-height: 1.6;
+            font-size: 0.95rem;
+            white-space: pre-wrap;
+        }
+
+        /* 오른쪽 구글 폼 영역 스타일 */
         iframe {
             width: 100%;
             height: 600px;
             border: none;
-            border-radius: 4px;
-        }
-        /* 리스트 스타일 (제목 클릭 시 본문 펼쳐짐) */
-        #list-container {
-            height: 600px;
-            overflow-y: auto;
-        }
-        details {
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            margin-bottom: 10px;
-            padding: 10px 15px;
-        }
-        summary {
-            font-weight: bold;
-            font-size: 1.1em;
-            cursor: pointer;
-            list-style: none; /* 기본 화살표 숨김 (브라우저 호환) */
-            outline: none;
-        }
-        summary::-webkit-details-marker {
-            display: none;
-        }
-        summary::before {
-            content: "➕ "; /* 닫혀있을 때 아이콘 */
-            font-size: 0.8em;
-        }
-        details[open] summary::before {
-            content: "➖ "; /* 열려있을 때 아이콘 */
-        }
-        .content-body {
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px dashed #eee;
-            color: #444;
-            line-height: 1.6;
-            white-space: pre-wrap; /* 줄바꿈 유지 */
+            border-radius: 8px;
         }
     </style>
 </head>
@@ -88,36 +114,59 @@
 
         <div class="right-panel">
             <h2>입력 (Input)</h2>
-            <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSfEbPitgCGNxb_SpbtENvFvMMyu3ykyScZfnfV52p3pq8g3hA/viewform?embedded=true"></iframe>
+            <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSfEbPitgCGNxb_SpbtENvFvMMyu3ykyScZfnfV52p3pq8g3hA/viewform?embedded=true">로드 중…</iframe>
         </div>
     </div>
 
     <script>
-        // 구글 시트 데이터를 JSON 형식으로 가져오는 주소
-        // 사용자가 올린 시트 ID(2PACX...n8-)를 사용했습니다.
-        const sheetId = "2PACX-1vRRT7oZ48CW8Yl7jWd9B0HF1FVX8HZCU2REomvPtaxwkDxoP5-3dlYHPDWyaM6y1j8ZSFnaqDsq-n8-";
-        const url = `https://docs.google.com/spreadsheets/d/e/${sheetId}/gviz/tq?tqx=out:json`;
+        // 게시하신 구글 시트의 CSV 데이터 주소
+        const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRRT7oZ48CW8Yl7jWd9B0HF1FVX8HZCU2REomvPtaxwkDxoP5-3dlYHPDWyaM6y1j8ZSFnaqDsq-n8-/pub?gid=1945945241&single=true&output=csv";
 
-        fetch(url)
-            .then(res => res.text())
-            .then(text => {
-                // 구글이 반환하는 불필요한 텍스트 제거하고 순수 JSON만 파싱
-                const jsonString = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
-                const data = JSON.parse(jsonString);
-                const rows = data.table.rows;
-                
+        // CSV 데이터를 읽어오는 함수
+        function parseCSV(str) {
+            const arr = [];
+            let quote = false;
+            let row = 0, col = 0;
+            for (let c = 0; c < str.length; c++) {
+                let cc = str[c], nc = str[c+1];
+                arr[row] = arr[row] || [];
+                arr[row][col] = arr[row][col] || '';
+                if (cc == '"' && quote && nc == '"') { arr[row][col] += cc; ++c; continue; }
+                if (cc == '"') { quote = !quote; continue; }
+                if (cc == ',' && !quote) { ++col; continue; }
+                if (cc == '\r' && nc == '\n' && !quote) { ++row; col = 0; ++c; continue; }
+                if (cc == '\n' && !quote) { ++row; col = 0; continue; }
+                if (cc == '\r' && !quote) { ++row; col = 0; continue; }
+                arr[row][col] += cc;
+            }
+            return arr;
+        }
+
+        // 데이터를 화면에 그려주는 기능
+        fetch(csvUrl)
+            .then(response => response.text())
+            .then(csvText => {
+                const data = parseCSV(csvText);
                 let html = '';
                 
-                // 첫 번째 줄(제목 행)을 제외하고 데이터 반복 (i=1부터 시작)
-                for (let i = 1; i < rows.length; i++) {
-                    const columns = rows[i].c;
-                    
-                    // 구글 폼 기본 구조: A열(0) 타임스탬프, B열(1) 제목, C열(2) 본문이라고 가정
-                    // 시트 구조에 따라 인덱스(1, 2)는 변경될 수 있습니다.
-                    const title = columns[1] && columns[1].v ? columns[1].v : '제목 없음';
-                    const body = columns[2] && columns[2].v ? columns[2].v : '내용 없음';
+                // 입력된 데이터가 없을 때
+                if (data.length <= 1) {
+                    document.getElementById('list-container').innerHTML = "아직 입력된 데이터가 없습니다.";
+                    return;
+                }
 
-                    // HTML <details> 태그를 사용하여 클릭 시 열리고 닫히는 UI 생성
+                // 최신 글이 위로 오도록 역순으로 목록 만들기 (i를 data.length - 1부터 줄여나감)
+                for (let i = data.length - 1; i >= 1; i--) {
+                    const row = data[i];
+                    
+                    // 빈 줄은 건너뜀
+                    if (!row || row.length === 0 || (!row[0] && !row[1])) continue;
+
+                    // 구글 폼 열매칭: [1]번째가 제목, [2]번째가 본문
+                    const title = row[1] ? row[1].replace(/</g, "&lt;").replace(/>/g, "&gt;") : '제목 없음';
+                    const body = row[2] ? row[2].replace(/</g, "&lt;").replace(/>/g, "&gt;") : '내용이 없습니다.';
+
+                    // HTML <details> 태그로 아코디언 메뉴 생성
                     html += `
                         <details>
                             <summary>${title}</summary>
@@ -126,10 +175,11 @@
                     `;
                 }
 
+                // 왼쪽 리스트 영역에 만든 HTML을 넣음
                 document.getElementById('list-container').innerHTML = html;
             })
             .catch(error => {
-                document.getElementById('list-container').innerHTML = "데이터를 불러오는 데 실패했습니다.";
+                document.getElementById('list-container').innerHTML = "데이터를 불러오는 데 실패했습니다. 구글 시트 웹 게시 설정을 확인해주세요.";
                 console.error("Error fetching data:", error);
             });
     </script>
