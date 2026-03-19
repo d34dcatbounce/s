@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>데이터 입력 및 목록</title>
     <style>
-        /* 모바일 및 PC 반응형 기본 스타일 */
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             margin: 0;
@@ -16,13 +15,12 @@
         
         .container {
             display: flex;
-            flex-direction: column; /* 모바일: 세로 배치 */
+            flex-direction: column;
             gap: 20px;
             max-width: 1000px;
             margin: 0 auto;
         }
 
-        /* 화면이 넓어지면(PC) 가로 배치로 변경 */
         @media (min-width: 768px) {
             .container {
                 flex-direction: row;
@@ -47,7 +45,6 @@
             margin-bottom: 15px;
         }
 
-        /* 왼쪽 리스트 영역 스타일 (제목 누르면 본문 나옴) */
         #list-container {
             max-height: 600px;
             overflow-y: auto;
@@ -95,7 +92,6 @@
             white-space: pre-wrap;
         }
 
-        /* 오른쪽 구글 폼 영역 스타일 */
         iframe {
             width: 100%;
             height: 600px;
@@ -114,7 +110,7 @@
 
         <div class="right-panel">
             <h2>입력 (Input)</h2>
-            <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSfEbPitgCGNxb_SpbtENvFvMMyu3ykyScZfnfV52p3pq8g3hA/viewform?embedded=true">로드 중…</iframe>
+            <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSfEbPitgCGNxb_SpbtENvFvMMyu3ykyScZfnfV52p3pq8g3hA/viewform?embedded=true">로드 중...</iframe>
         </div>
     </div>
 
@@ -122,7 +118,7 @@
         // 게시하신 구글 시트의 CSV 데이터 주소
         const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRRT7oZ48CW8Yl7jWd9B0HF1FVX8HZCU2REomvPtaxwkDxoP5-3dlYHPDWyaM6y1j8ZSFnaqDsq-n8-/pub?gid=1945945241&single=true&output=csv";
 
-        // CSV 데이터를 읽어오는 함수
+        // CSV 데이터를 배열로 변환하는 함수
         function parseCSV(str) {
             const arr = [];
             let quote = false;
@@ -142,31 +138,29 @@
             return arr;
         }
 
-        // 데이터를 화면에 그려주는 기능
+        // 데이터를 가져와 화면에 출력
         fetch(csvUrl)
             .then(response => response.text())
             .then(csvText => {
                 const data = parseCSV(csvText);
                 let html = '';
                 
-                // 입력된 데이터가 없을 때
+                // 데이터가 없을 때
                 if (data.length <= 1) {
                     document.getElementById('list-container').innerHTML = "아직 입력된 데이터가 없습니다.";
                     return;
                 }
 
-                // 최신 글이 위로 오도록 역순으로 목록 만들기 (i를 data.length - 1부터 줄여나감)
+                // 역순 정렬 (최신 글이 위로)
                 for (let i = data.length - 1; i >= 1; i--) {
                     const row = data[i];
                     
-                    // 빈 줄은 건너뜀
                     if (!row || row.length === 0 || (!row[0] && !row[1])) continue;
 
-                    // 구글 폼 열매칭: [1]번째가 제목, [2]번째가 본문
+                    // 열 매칭: [1]번이 제목, [2]번이 본문
                     const title = row[1] ? row[1].replace(/</g, "&lt;").replace(/>/g, "&gt;") : '제목 없음';
                     const body = row[2] ? row[2].replace(/</g, "&lt;").replace(/>/g, "&gt;") : '내용이 없습니다.';
 
-                    // HTML <details> 태그로 아코디언 메뉴 생성
                     html += `
                         <details>
                             <summary>${title}</summary>
@@ -175,7 +169,6 @@
                     `;
                 }
 
-                // 왼쪽 리스트 영역에 만든 HTML을 넣음
                 document.getElementById('list-container').innerHTML = html;
             })
             .catch(error => {
