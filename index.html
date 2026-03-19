@@ -45,6 +45,7 @@
             margin-bottom: 15px;
         }
 
+        /* 왼쪽 리스트 영역 스타일 */
         #list-container {
             max-height: 600px;
             overflow-y: auto;
@@ -92,11 +93,60 @@
             white-space: pre-wrap;
         }
 
-        iframe {
+        /* 오른쪽 자체 입력 폼 스타일 */
+        .custom-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #475569;
+        }
+
+        .custom-form input, .custom-form textarea {
             width: 100%;
-            height: 600px;
-            border: none;
+            padding: 12px;
+            border: 1px solid #cbd5e1;
             border-radius: 8px;
+            font-size: 1rem;
+            font-family: inherit;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+
+        .custom-form input:focus, .custom-form textarea:focus {
+            outline: none;
+            border-color: #2c3e50;
+        }
+
+        .custom-form textarea {
+            height: 200px;
+            resize: vertical;
+        }
+
+        .submit-btn {
+            background-color: #2c3e50;
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .submit-btn:hover {
+            background-color: #1a252f;
         }
     </style>
 </head>
@@ -110,15 +160,45 @@
 
         <div class="right-panel">
             <h2>입력 (Input)</h2>
-            <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSfEbPitgCGNxb_SpbtENvFvMMyu3ykyScZfnfV52p3pq8g3hA/viewform?embedded=true">로드 중...</iframe>
+            
+            <form action="https://docs.google.com/forms/d/e/1FAIpQLSfEbPitgCGNxb_SpbtENvFvMMyu3ykyScZfnfV52p3pq8g3hA/formResponse" 
+                  method="POST" 
+                  target="hidden_iframe" 
+                  class="custom-form" 
+                  id="myForm"
+                  onsubmit="submitted=true;">
+                
+                <div class="form-group">
+                    <label for="title">제목</label>
+                    <input type="text" id="title" name="entry.900408598" required placeholder="제목을 입력하세요">
+                </div>
+                
+                <div class="form-group">
+                    <label for="content">본문</label>
+                    <textarea id="content" name="entry.1520761373" required placeholder="내용을 입력하세요"></textarea>
+                </div>
+                
+                <button type="submit" class="submit-btn">제출하기</button>
+            </form>
+
+            <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;" onload="if(submitted){ formCompleted(); }"></iframe>
         </div>
     </div>
 
     <script>
-        // 게시하신 구글 시트의 CSV 데이터 주소
+        // 전역 변수: 폼 제출 상태 확인용
+        let submitted = false;
+
+        // 제출 완료 시 실행될 함수
+        function formCompleted() {
+            alert("성공적으로 기록되었습니다. 데이터가 반영되는 데 몇 분 정도 소요될 수 있습니다.");
+            document.getElementById("myForm").reset(); // 폼 내용 초기화
+            submitted = false;
+        }
+
+        // 구글 시트 데이터 로드
         const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRRT7oZ48CW8Yl7jWd9B0HF1FVX8HZCU2REomvPtaxwkDxoP5-3dlYHPDWyaM6y1j8ZSFnaqDsq-n8-/pub?gid=1945945241&single=true&output=csv";
 
-        // CSV 데이터를 배열로 변환하는 함수
         function parseCSV(str) {
             const arr = [];
             let quote = false;
@@ -138,26 +218,22 @@
             return arr;
         }
 
-        // 데이터를 가져와 화면에 출력
         fetch(csvUrl)
             .then(response => response.text())
             .then(csvText => {
                 const data = parseCSV(csvText);
                 let html = '';
                 
-                // 데이터가 없을 때
                 if (data.length <= 1) {
                     document.getElementById('list-container').innerHTML = "아직 입력된 데이터가 없습니다.";
                     return;
                 }
 
-                // 역순 정렬 (최신 글이 위로)
                 for (let i = data.length - 1; i >= 1; i--) {
                     const row = data[i];
                     
                     if (!row || row.length === 0 || (!row[0] && !row[1])) continue;
 
-                    // 열 매칭: [1]번이 제목, [2]번이 본문
                     const title = row[1] ? row[1].replace(/</g, "&lt;").replace(/>/g, "&gt;") : '제목 없음';
                     const body = row[2] ? row[2].replace(/</g, "&lt;").replace(/>/g, "&gt;") : '내용이 없습니다.';
 
@@ -172,7 +248,7 @@
                 document.getElementById('list-container').innerHTML = html;
             })
             .catch(error => {
-                document.getElementById('list-container').innerHTML = "데이터를 불러오는 데 실패했습니다. 구글 시트 웹 게시 설정을 확인해주세요.";
+                document.getElementById('list-container').innerHTML = "데이터를 불러오는 데 실패했습니다.";
                 console.error("Error fetching data:", error);
             });
     </script>
