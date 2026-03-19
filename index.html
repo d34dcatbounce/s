@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>데이터 입력 및 목록</title>
+    <title>데이터 입력 및 목록 (자체 DB)</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -58,6 +58,7 @@
             margin-bottom: 10px;
             padding: 12px 15px;
             transition: all 0.2s ease;
+            position: relative;
         }
         
         summary {
@@ -67,6 +68,7 @@
             list-style: none;
             outline: none;
             word-break: keep-all;
+            padding-right: 60px; /* 삭제 버튼 공간 확보 */
         }
         
         summary::-webkit-details-marker {
@@ -91,6 +93,25 @@
             line-height: 1.6;
             font-size: 0.95rem;
             white-space: pre-wrap;
+        }
+
+        /* ★ 삭제 버튼 스타일 */
+        .delete-btn {
+            position: absolute;
+            top: 12px;
+            right: 15px;
+            background-color: #ff4757;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .delete-btn:hover {
+            background-color: #ff6b81;
         }
 
         /* 오른쪽 자체 입력 폼 스타일 */
@@ -148,6 +169,11 @@
         .submit-btn:hover {
             background-color: #1a252f;
         }
+        
+        .submit-btn:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
@@ -161,96 +187,130 @@
         <div class="right-panel">
             <h2>입력 (Input)</h2>
             
-            <form action="https://docs.google.com/forms/d/e/1FAIpQLSfEbPitgCGNxb_SpbtENvFvMMyu3ykyScZfnfV52p3pq8g3hA/formResponse" 
-                  method="POST" 
-                  target="hidden_iframe" 
-                  class="custom-form" 
-                  id="myForm"
-                  onsubmit="submitted=true;">
-                
+            <form class="custom-form" id="myForm">
                 <div class="form-group">
                     <label for="title">제목</label>
-                    <input type="text" id="title" name="entry.900408598" required placeholder="제목을 입력하세요">
+                    <input type="text" id="title" required placeholder="제목을 입력하세요">
                 </div>
                 
                 <div class="form-group">
                     <label for="content">본문</label>
-                    <textarea id="content" name="entry.1520761373" required placeholder="내용을 입력하세요"></textarea>
+                    <textarea id="content" required placeholder="내용을 입력하세요"></textarea>
                 </div>
                 
-                <button type="submit" class="submit-btn">제출하기</button>
+                <button type="submit" id="submitBtn" class="submit-btn">제출하기</button>
             </form>
-
-            <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;" onload="if(submitted){ formCompleted(); }"></iframe>
         </div>
     </div>
 
     <script>
-        // 전역 변수: 폼 제출 상태 확인용
-        let submitted = false;
+        // 발급받으신 앱스 스크립트 API 주소
+        const scriptUrl = "https://script.google.com/macros/s/AKfycbzd77E3TuZzFoxsN9C5W0ZIYscV3NEsndO-mhel9JZPNap6sS4_O7wDpc9rz8gmcEu-/exec";
+        const listContainer = document.getElementById('list-container');
+        const myForm = document.getElementById('myForm');
+        const submitBtn = document.getElementById('submitBtn');
 
-        // 제출 완료 시 실행될 함수
-        function formCompleted() {
-            alert("성공적으로 기록되었습니다. 데이터가 반영되는 데 몇 분 정도 소요될 수 있습니다.");
-            document.getElementById("myForm").reset(); // 폼 내용 초기화
-            submitted = false;
+        // 1. 데이터 불러오기 함수 (Read)
+        function loadData() {
+            listContainer.innerHTML = "데이터를 불러오는 중입니다...";
+            
+            fetch(scriptUrl)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.length === 0) {
+                        listContainer.innerHTML = "아직 입력된 데이터가 없습니다.";
+                        return;
+                    }
+
+                    let html = '';
+                    // 최신 글이 위로 오도록 역순 출력
+                    for (let i = data.length - 1; i >= 0; i--) {
+                        const item = data[i];
+                        const safeTitle = item.title.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                        const safeContent = item.content.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                        
+                        html += `
+                            <details>
+                                <summary>${safeTitle}</summary>
+                                <button class="delete-btn" onclick="deleteData('${item.id}')">삭제</button>
+                                <div class="content-body">${safeContent}</div>
+                            </details>
+                        `;
+                    }
+                    listContainer.innerHTML = html;
+                })
+                .catch(error => {
+                    listContainer.innerHTML = "데이터를 불러오지 못했습니다.";
+                    console.error("Error:", error);
+                });
         }
 
-        // 구글 시트 데이터 로드
-        const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRRT7oZ48CW8Yl7jWd9B0HF1FVX8HZCU2REomvPtaxwkDxoP5-3dlYHPDWyaM6y1j8ZSFnaqDsq-n8-/pub?gid=1945945241&single=true&output=csv";
+        // 2. 데이터 제출하기 (Create)
+        myForm.addEventListener('submit', function(e) {
+            e.preventDefault(); // 페이지 새로고침 방지
+            
+            const titleVal = document.getElementById('title').value;
+            const contentVal = document.getElementById('content').value;
+            
+            // 버튼 상태 변경
+            submitBtn.innerText = "저장 중...";
+            submitBtn.disabled = true;
 
-        function parseCSV(str) {
-            const arr = [];
-            let quote = false;
-            let row = 0, col = 0;
-            for (let c = 0; c < str.length; c++) {
-                let cc = str[c], nc = str[c+1];
-                arr[row] = arr[row] || [];
-                arr[row][col] = arr[row][col] || '';
-                if (cc == '"' && quote && nc == '"') { arr[row][col] += cc; ++c; continue; }
-                if (cc == '"') { quote = !quote; continue; }
-                if (cc == ',' && !quote) { ++col; continue; }
-                if (cc == '\r' && nc == '\n' && !quote) { ++row; col = 0; ++c; continue; }
-                if (cc == '\n' && !quote) { ++row; col = 0; continue; }
-                if (cc == '\r' && !quote) { ++row; col = 0; continue; }
-                arr[row][col] += cc;
-            }
-            return arr;
-        }
+            // 서버로 보낼 데이터 묶기
+            const formData = new URLSearchParams();
+            formData.append('action', 'insert');
+            formData.append('title', titleVal);
+            formData.append('content', contentVal);
 
-        fetch(csvUrl)
-            .then(response => response.text())
-            .then(csvText => {
-                const data = parseCSV(csvText);
-                let html = '';
-                
-                if (data.length <= 1) {
-                    document.getElementById('list-container').innerHTML = "아직 입력된 데이터가 없습니다.";
-                    return;
-                }
-
-                for (let i = data.length - 1; i >= 1; i--) {
-                    const row = data[i];
-                    
-                    if (!row || row.length === 0 || (!row[0] && !row[1])) continue;
-
-                    const title = row[1] ? row[1].replace(/</g, "&lt;").replace(/>/g, "&gt;") : '제목 없음';
-                    const body = row[2] ? row[2].replace(/</g, "&lt;").replace(/>/g, "&gt;") : '내용이 없습니다.';
-
-                    html += `
-                        <details>
-                            <summary>${title}</summary>
-                            <div class="content-body">${body}</div>
-                        </details>
-                    `;
-                }
-
-                document.getElementById('list-container').innerHTML = html;
+            fetch(scriptUrl, {
+                method: 'POST',
+                body: formData
+            })
+            .then(() => {
+                alert("성공적으로 등록되었습니다.");
+                myForm.reset(); // 입력칸 비우기
+                loadData(); // 목록 새로고침
             })
             .catch(error => {
-                document.getElementById('list-container').innerHTML = "데이터를 불러오는 데 실패했습니다.";
-                console.error("Error fetching data:", error);
+                alert("등록 중 오류가 발생했습니다.");
+                console.error("Error:", error);
+            })
+            .finally(() => {
+                // 버튼 상태 복구
+                submitBtn.innerText = "제출하기";
+                submitBtn.disabled = false;
             });
+        });
+
+        // 3. 데이터 삭제하기 (Delete)
+        function deleteData(id) {
+            if (!confirm("정말 이 글을 삭제하시겠습니까?")) return;
+
+            // 삭제 중 표시 (해당 버튼 텍스트 변경)
+            event.target.innerText = "삭제 중...";
+            event.target.disabled = true;
+
+            const formData = new URLSearchParams();
+            formData.append('action', 'delete');
+            formData.append('id', id);
+
+            fetch(scriptUrl, {
+                method: 'POST',
+                body: formData
+            })
+            .then(() => {
+                alert("삭제되었습니다.");
+                loadData(); // 목록 새로고침
+            })
+            .catch(error => {
+                alert("삭제 중 오류가 발생했습니다.");
+                console.error("Error:", error);
+                loadData(); // 실패해도 일단 목록 새로고침
+            });
+        }
+
+        // 페이지가 열리면 즉시 데이터 불러오기 실행
+        loadData();
     </script>
 
 </body>
