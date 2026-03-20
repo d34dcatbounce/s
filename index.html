@@ -5,19 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>데이터 입력 및 목록 (자체 DB)</title>
     <style>
+        /* ★ 검정 배경, 흰색 텍스트, 날카로운 직각 스타일 */
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             margin: 0;
-            padding: 15px;
-            background-color: #f4f7f6;
-            color: #333;
+            padding: 20px;
+            background-color: #0a0a0a; /* 딥 블랙 */
+            color: #eeeeee;
         }
         
+        /* 좌우 레이아웃 복귀 */
         .container {
             display: flex;
             flex-direction: column;
             gap: 20px;
-            max-width: 1000px;
+            max-width: 1100px;
             margin: 0 auto;
         }
 
@@ -30,129 +32,172 @@
             }
         }
 
+        /* 패널: 직각 모서리, 미세한 테두리 */
         .left-panel, .right-panel {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            background: #111111;
+            padding: 25px;
+            border: 1px solid #333;
+            border-radius: 0; /* 둥근 모서리 완전 제거 */
         }
 
-        /* 원래 h2 스타일 (오른쪽 패널용) */
         h2 {
             margin-top: 0;
             font-size: 1.2rem;
-            border-bottom: 2px solid #2c3e50;
+            color: #ffffff;
+            border-bottom: 2px solid #ff1493; /* 핫핑크 언더라인 */
             padding-bottom: 10px;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
-        /* ★ 왼쪽 패널 헤더 (제목과 EXPAND 버튼을 가로로 나란히 배치) */
+        /* 목록 헤더 (제목 + EXPAND 버튼) */
         .list-header-container {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 2px solid #2c3e50;
+            border-bottom: 2px solid #ff1493;
             padding-bottom: 10px;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
         
         .list-header-container h2 {
-            border-bottom: none; /* 컨테이너에 줄을 그었으므로 h2 자체의 줄은 없앰 */
+            border-bottom: none;
             padding-bottom: 0;
             margin-bottom: 0;
         }
 
-        /* ★ 작고 강렬한 EXPAND 버튼 스타일 */
+        /* 힙한 EXPAND 버튼 (검정 배경 + 핫핑크 테두리/글자 + 직각) */
         .go-random-btn {
-            background-color: #000000; /* 검정 배경 */
-            color: #ff1493; /* 핫핑크 (DeepPink) */
+            background-color: #000000; 
+            color: #ff1493; 
+            border: 1px solid #ff1493;
             text-decoration: none;
-            padding: 4px 10px;
-            border-radius: 4px;
-            font-size: 0.8rem;
+            padding: 6px 12px;
+            border-radius: 0; 
+            font-size: 0.85rem;
             font-weight: 800;
-            letter-spacing: 1px; /* 글자 사이 간격 살짝 넓게 */
-            transition: background-color 0.2s, color 0.2s;
+            letter-spacing: 1px;
+            transition: all 0.2s ease;
         }
-
         .go-random-btn:hover {
-            background-color: #222222;
-            color: #ff69b4; /* 마우스 올리면 살짝 부드러운 핑크로 */
+            background-color: #ff1493;
+            color: #000000; 
         }
 
+        /* 목록 영역 스타일 */
         #list-container {
-            max-height: 550px; 
+            max-height: 600px;
             overflow-y: auto;
+            /* 스크롤바 디자인 (크롬/사파리) */
+            scrollbar-width: thin;
+            scrollbar-color: #ff1493 #111;
         }
+        #list-container::-webkit-scrollbar { width: 6px; }
+        #list-container::-webkit-scrollbar-thumb { background: #ff1493; }
+        #list-container::-webkit-scrollbar-track { background: #111; }
         
+        /* 목록 아이템: 다크 그레이 배경, 핫핑크 포인트 선 */
         details {
-            background: #fff;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            padding: 12px 15px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-left: 3px solid #ff1493; /* 왼쪽에 핫핑크 포인트 */
+            border-radius: 0;
+            margin-bottom: 15px;
+            padding: 15px;
             transition: all 0.2s ease;
             position: relative;
+        }
+        details:hover {
+            border-color: #ff1493;
         }
         
         summary {
             font-weight: 600;
-            font-size: 1rem;
+            font-size: 1.05rem;
+            color: #ffffff;
             cursor: pointer;
             list-style: none;
             outline: none;
             word-break: keep-all;
-            padding-right: 60px; 
+            padding-right: 65px; 
         }
         
         summary::-webkit-details-marker { display: none; }
-        summary::before { content: "➕ "; font-size: 0.8em; margin-right: 5px; }
-        details[open] summary::before { content: "➖ "; }
+        summary::before { content: "► "; font-size: 0.8em; margin-right: 8px; color: #ff1493; }
+        details[open] summary::before { content: "▼ "; }
         
         .content-body {
             margin-top: 15px;
             padding-top: 15px;
-            border-top: 1px dashed #cbd5e1;
-            color: #475569;
-            line-height: 1.6;
+            border-top: 1px dashed #444;
+            color: #cccccc; /* 본문은 약간 흐린 회색으로 가독성 확보 */
+            line-height: 1.7;
             font-size: 0.95rem;
             white-space: pre-wrap;
+            text-align: justify;
         }
 
+        /* 삭제 버튼: 심플하고 날카롭게 */
         .delete-btn {
             position: absolute;
-            top: 12px;
+            top: 13px;
             right: 15px;
-            background-color: #ff4757;
-            color: white;
-            border: none;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.8rem;
+            background-color: transparent;
+            color: #666;
+            border: 1px solid #666;
+            padding: 3px 8px;
+            border-radius: 0;
+            font-size: 0.75rem;
             cursor: pointer;
+            transition: all 0.2s;
+        }
+        .delete-btn:hover { 
+            background-color: #ff1493; 
+            border-color: #ff1493;
+            color: #000;
+        }
+
+        /* 입력 폼 스타일 */
+        .custom-form { display: flex; flex-direction: column; gap: 20px; }
+        .form-group { display: flex; flex-direction: column; gap: 8px; }
+        .form-group label { font-weight: 600; font-size: 0.9rem; color: #ff1493; letter-spacing: 1px; text-transform: uppercase; }
+
+        /* 입력창: 블랙 앤 핑크 */
+        .custom-form input, .custom-form textarea {
+            width: 100%; 
+            padding: 15px; 
+            background-color: #0a0a0a;
+            color: #ffffff;
+            border: 1px solid #444;
+            border-radius: 0; 
+            font-size: 1rem; 
+            font-family: inherit;
+            box-sizing: border-box; 
+            transition: border-color 0.2s;
+        }
+        .custom-form input:focus, .custom-form textarea:focus { 
+            outline: none; 
+            border-color: #ff1493; /* 포커스 시 핫핑크 라인 */
+        }
+        .custom-form textarea { height: 250px; resize: vertical; }
+
+        /* 제출 버튼: 강렬한 핫핑크 직각 블록 */
+        .submit-btn {
+            background-color: #ff1493; 
+            color: #000000; 
+            border: none;
+            padding: 16px; 
+            border-radius: 0; 
+            font-size: 1.1rem;
+            font-weight: 800; 
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            cursor: pointer; 
             transition: background-color 0.2s;
         }
-        .delete-btn:hover { background-color: #ff6b81; }
-
-        .custom-form { display: flex; flex-direction: column; gap: 15px; }
-        .form-group { display: flex; flex-direction: column; gap: 5px; }
-        .form-group label { font-weight: 600; font-size: 0.9rem; color: #475569; }
-
-        .custom-form input, .custom-form textarea {
-            width: 100%; padding: 12px; border: 1px solid #cbd5e1;
-            border-radius: 8px; font-size: 1rem; font-family: inherit;
-            box-sizing: border-box; transition: border-color 0.2s;
-        }
-        .custom-form input:focus, .custom-form textarea:focus { outline: none; border-color: #2c3e50; }
-        .custom-form textarea { height: 200px; resize: vertical; }
-
-        .submit-btn {
-            background-color: #2c3e50; color: white; border: none;
-            padding: 14px; border-radius: 8px; font-size: 1rem;
-            font-weight: 600; cursor: pointer; transition: background-color 0.2s;
-        }
-        .submit-btn:hover { background-color: #1a252f; }
-        .submit-btn:disabled { background-color: #95a5a6; cursor: not-allowed; }
+        .submit-btn:hover { background-color: #ff69b4; }
+        .submit-btn:disabled { background-color: #555; color: #888; cursor: not-allowed; }
     </style>
 </head>
 <body>
@@ -160,60 +205,57 @@
     <div class="container">
         <div class="left-panel">
             <div class="list-header-container">
-                <h2>목록 (List)</h2>
+                <h2>List</h2>
                 <a href="random.html" class="go-random-btn">EXPAND</a>
             </div>
-            
             <div id="list-container">데이터를 불러오는 중입니다...</div>
         </div>
 
         <div class="right-panel">
-            <h2>입력 (Input)</h2>
-            
+            <h2>Input</h2>
             <form class="custom-form" id="myForm">
                 <div class="form-group">
-                    <label for="title">제목</label>
+                    <label for="title">Title</label>
                     <input type="text" id="title" required placeholder="제목을 입력하세요">
                 </div>
                 
                 <div class="form-group">
-                    <label for="content">본문</label>
+                    <label for="content">Content</label>
                     <textarea id="content" required placeholder="내용을 입력하세요"></textarea>
                 </div>
                 
-                <button type="submit" id="submitBtn" class="submit-btn">제출하기</button>
+                <button type="submit" id="submitBtn" class="submit-btn">Submit</button>
             </form>
         </div>
     </div>
 
     <script>
-        // API 주소
         const scriptUrl = "https://script.google.com/macros/s/AKfycbzd77E3TuZzFoxsN9C5W0ZIYscV3NEsndO-mhel9JZPNap6sS4_O7wDpc9rz8gmcEu-/exec";
         const listContainer = document.getElementById('list-container');
         const myForm = document.getElementById('myForm');
         const submitBtn = document.getElementById('submitBtn');
 
         function loadData() {
-            listContainer.innerHTML = "데이터를 불러오는 중입니다...";
+            listContainer.innerHTML = "<span style='color:#666;'>SYSTEM: Loading data...</span>";
             
             fetch(scriptUrl)
                 .then(res => res.json())
                 .then(data => {
                     if (data.length === 0) {
-                        listContainer.innerHTML = "아직 입력된 데이터가 없습니다.";
+                        listContainer.innerHTML = "<span style='color:#666;'>SYSTEM: No records found.</span>";
                         return;
                     }
 
                     let html = '';
                     for (let i = data.length - 1; i >= 0; i--) {
                         const item = data[i];
-                        const safeTitle = String(item.title || "제목 없음").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-                        const safeContent = String(item.content || "내용 없음").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                        const safeTitle = String(item.title || "Untitled").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                        const safeContent = String(item.content || "No content").replace(/</g, "&lt;").replace(/>/g, "&gt;");
                         
                         html += `
                             <details>
                                 <summary>${safeTitle}</summary>
-                                <button class="delete-btn" onclick="deleteData('${item.id}')">삭제</button>
+                                <button class="delete-btn" onclick="deleteData('${item.id}')">DEL</button>
                                 <div class="content-body">${safeContent}</div>
                             </details>
                         `;
@@ -221,7 +263,7 @@
                     listContainer.innerHTML = html;
                 })
                 .catch(error => {
-                    listContainer.innerHTML = "데이터를 불러오지 못했습니다.";
+                    listContainer.innerHTML = "<span style='color:#ff1493;'>ERROR: Failed to fetch data.</span>";
                     console.error("Error:", error);
                 });
         }
@@ -232,7 +274,7 @@
             const titleVal = document.getElementById('title').value;
             const contentVal = document.getElementById('content').value;
             
-            submitBtn.innerText = "저장 중...";
+            submitBtn.innerText = "Processing...";
             submitBtn.disabled = true;
 
             const formData = new URLSearchParams();
@@ -245,7 +287,6 @@
                 body: formData
             })
             .then(() => {
-                alert("성공적으로 등록되었습니다.");
                 myForm.reset(); 
                 loadData(); 
             })
@@ -254,15 +295,15 @@
                 console.error("Error:", error);
             })
             .finally(() => {
-                submitBtn.innerText = "제출하기";
+                submitBtn.innerText = "Submit";
                 submitBtn.disabled = false;
             });
         });
 
         function deleteData(id) {
-            if (!confirm("정말 이 글을 삭제하시겠습니까?")) return;
+            if (!confirm("정말 이 데이터를 삭제하시겠습니까?")) return;
 
-            event.target.innerText = "삭제 중...";
+            event.target.innerText = "...";
             event.target.disabled = true;
 
             const formData = new URLSearchParams();
@@ -274,7 +315,6 @@
                 body: formData
             })
             .then(() => {
-                alert("삭제되었습니다.");
                 loadData(); 
             })
             .catch(error => {
