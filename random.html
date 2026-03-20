@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>꾸준함을 모으면 아름답다</title>
+    <title>랜덤 감성 아카이브</title>
     <link href="https://fonts.googleapis.com/css2?family=Dongle&family=Gaegu&family=Gowun+Dodum&family=Hi+Melody&family=Nanum+Myeongjo&display=swap" rel="stylesheet">
     <style>
         body {
@@ -16,16 +16,16 @@
         /* 핀터레스트처럼 벽돌 쌓는 레이아웃 */
         .masonry-grid {
             column-count: 2; /* 모바일: 2열 */
-            column-gap: 20px; /* 글 덩어리 사이 가로 여백 */
+            column-gap: 20px; /* 가로 여백 */
         }
 
         @media (min-width: 600px) { .masonry-grid { column-count: 3; } }
         @media (min-width: 900px) { .masonry-grid { column-count: 4; } }
 
-        /* ★ 배경 없는 순수 텍스트 타일 */
+        /* 배경 없는 순수 텍스트 타일 */
         .text-tile {
             break-inside: avoid;
-            margin-bottom: 30px; /* 글 덩어리 사이 세로 여백 */
+            margin-bottom: 35px; /* 세로 여백을 조금 더 줌 */
             transition: transform 0.3s ease;
             
             /* 양끝맞춤 텍스트 */
@@ -34,10 +34,10 @@
             line-height: 1.6;
         }
 
-        /* 클릭 가능한 토글 버튼 (..., <접기>) 스타일 */
+        /* 클릭 가능한 토글 버튼 (...) */
         .action-btn {
             cursor: pointer;
-            opacity: 0.6; /* 살짝 투명하게 해서 본문과 차이 둠 */
+            opacity: 0.5;
             font-weight: bold;
             display: inline-block;
             margin-left: 4px;
@@ -46,7 +46,6 @@
 
         .action-btn:hover {
             opacity: 1;
-            text-decoration: underline;
         }
 
         /* 돌아가기 버튼 */
@@ -72,14 +71,58 @@
             font-size: 1.1rem;
             margin-top: 50px;
         }
+
+        /* ★ 넓게 펼쳐지는 모달(팝업) 창 스타일 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(18, 18, 18, 0.85); /* 반투명 어두운 배경 */
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px); /* 뒤에 있는 글자들 예쁘게 흐림 처리 */
+        }
+
+        .modal-content {
+            width: 90%; /* 모바일에서 가로폭을 시원하게 씀 */
+            max-width: 650px;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 20px;
+            text-align: justify;
+            line-height: 1.8;
+            word-break: break-all;
+            /* 스크롤바 숨기기 (감성 유지) */
+            scrollbar-width: none; 
+        }
+        .modal-content::-webkit-scrollbar { display: none; }
+
+        .modal-close {
+            display: block;
+            text-align: right;
+            margin-top: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+        }
+        .modal-close:hover { opacity: 1; }
     </style>
 </head>
 <body>
 
-    <div id="loading">수집 중...</div>
+    <div id="loading">로딩중...</div>
     <div id="gallery-container" class="masonry-grid"></div>
 
     <a href="index.html" class="back-btn">⬅ 돌아가기</a>
+
+    <div id="textModal" class="modal-overlay" onclick="closeModal(event)">
+        <div class="modal-content" id="modalContent" onclick="event.stopPropagation()">
+            <div id="modalBody"></div>
+            <div class="modal-close" onclick="closeModal(event)">&lt;접기&gt;</div>
+        </div>
+    </div>
 
     <script>
         const scriptUrl = "https://script.google.com/macros/s/AKfycbzd77E3TuZzFoxsN9C5W0ZIYscV3NEsndO-mhel9JZPNap6sS4_O7wDpc9rz8gmcEu-/exec";
@@ -94,7 +137,6 @@
             "'Hi Melody', cursive"     
         ];
 
-        // 화사한 랜덤 글자색
         function getRandomTextColor() {
             const h = Math.floor(Math.random() * 360); 
             const s = Math.floor(Math.random() * 50) + 50; 
@@ -109,7 +151,6 @@
             }
         }
 
-        // HTML 특수기호(&lt;, &gt;) 중간에 잘리지 않게 안전하게 자르는 함수
         function getSafeShortText(text, maxLen) {
             if (text.length <= maxLen) return text;
             let sub = text.substring(0, maxLen);
@@ -120,19 +161,30 @@
             return sub;
         }
 
-        // 펼치기/접기 작동 함수
-        window.toggleText = function(btn, isExpand) {
+        // ★ '...'을 누르면 모달 창을 열어주는 함수
+        window.openModal = function(btn) {
             const tile = btn.closest('.text-tile');
-            const shortView = tile.querySelector('.short-view');
-            const fullView = tile.querySelector('.full-view');
-            
-            if (isExpand) {
-                shortView.style.display = 'none';
-                fullView.style.display = 'inline';
-            } else {
-                shortView.style.display = 'inline';
-                fullView.style.display = 'none';
-            }
+            // 숨겨둔 전체 텍스트 내용과 폰트, 색상 정보를 가져옴
+            const fullText = tile.querySelector('.full-view').innerHTML;
+            const font = tile.style.fontFamily;
+            const color = tile.style.color;
+
+            const modal = document.getElementById('textModal');
+            const modalBody = document.getElementById('modalBody');
+
+            // 팝업 창에 내용과 스타일을 똑같이 적용
+            modalBody.innerHTML = fullText;
+            modalBody.style.fontFamily = font;
+            modalBody.style.color = color;
+            modalBody.style.fontSize = "1.25rem"; // 읽기 편하게 글자 크기 조금 키움
+
+            modal.style.display = 'flex'; // 모달 띄우기
+        };
+
+        // ★ 모달 창 닫기 함수
+        window.closeModal = function(e) {
+            if(e) e.stopPropagation();
+            document.getElementById('textModal').style.display = 'none';
         };
 
         fetch(scriptUrl)
@@ -156,8 +208,8 @@
                     const font = fontList[Math.floor(Math.random() * fontList.length)];
                     const fontSize = Math.random() > 0.8 ? '1.15rem' : '0.95rem'; 
 
-                    // ★ 한 화면에 4개 정도 보이도록 글자 수를 70자 내외로 제한
-                    const limit = 70; 
+                    // ★ 분량 3배 증가: 약 210자 내외로 컷
+                    const limit = 210; 
                     const isLong = safeContent.length > limit;
 
                     let contentHtml = '';
@@ -165,15 +217,16 @@
                         const shortText = getSafeShortText(safeContent, limit);
                         contentHtml = `
                             <span class="short-view">
-                                ${shortText}<span class="action-btn" onclick="toggleText(this, true)">...</span>
+                                ${shortText}<span class="action-btn" onclick="openModal(this)">...</span>
                             </span>
-                            <span class="full-view" style="display:none;">
-                                ${safeContent} <span class="action-btn" onclick="toggleText(this, false)">&lt;접기&gt;</span>
-                            </span>
+                            <span class="full-view" style="display:none;">${safeContent}</span>
                         `;
                     } else {
-                        // 짧은 글은 그대로 표시
-                        contentHtml = `<span class="short-view">${safeContent}</span>`;
+                        // 짧은 글은 그대로 표시 (클릭할 필요 없음)
+                        contentHtml = `
+                            <span class="short-view">${safeContent}</span>
+                            <span class="full-view" style="display:none;">${safeContent}</span>
+                        `;
                     }
 
                     html += `
