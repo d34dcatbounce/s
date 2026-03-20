@@ -3,103 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Archive</title>
-    <link href="https://fonts.googleapis.com/css2?family=Gaegu&family=Gamja+Flower&family=Nanum+Myeongjo&family=Song+Myung&display=swap" rel="stylesheet">
+    <title>랜덤 감성 아카이브</title>
+    <link href="https://fonts.googleapis.com/css2?family=Dongle&family=Gaegu&family=Gowun+Dodum&family=Hi+Melody&family=Nanum+Myeongjo&display=swap" rel="stylesheet">
     <style>
         body {
             margin: 0;
-            padding: 20px;
-            background-color: #222; /* 배경은 칙칙하게 해서 폰트가 튀게 함 */
-            color: white;
-            font-family: sans-serif;
+            padding: 30px;
+            background-color: #1a1a1a; /* 살짝 어두운 배경으로 컬러풀한 타일이 돋보이게 */
+            font-family: -apple-system, sans-serif;
         }
 
-        h1 {
-            text-align: center;
-            font-family: 'Song Myung', serif;
-            margin-bottom: 30px;
+        /* 핀터레스트처럼 벽돌 쌓는 레이아웃 (CSS Multi-column) */
+        .masonry-grid {
+            column-count: 1; /* 모바일: 1줄 */
+            column-gap: 20px;
         }
 
-        /* ★ 핵심: 꽉 차는 격자 레이아웃 ★ */
-        #gallery-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 10px;
-            /* 꽉 차게 하기 위해 벽돌 쌓기 방식 적용 */
-            grid-auto-flow: dense;
-        }
+        /* 화면이 넓어지면 단 수를 늘림 */
+        @media (min-width: 600px) { .masonry-grid { column-count: 2; } }
+        @media (min-width: 900px) { .masonry-grid { column-count: 3; } }
+        @media (min-width: 1200px) { .masonry-grid { column-count: 4; } }
 
+        /* 각각의 텍스트 조각 타일 */
         .text-tile {
+            break-inside: avoid; /* 타일이 단 중간에 잘리지 않도록 보호 */
+            margin-bottom: 20px;
             padding: 25px;
-            border-radius: 5px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            line-height: 1.6;
+            border-radius: 12px;
+            color: #111; /* 글자는 진한 먹색 */
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+            
+            /* ★ 핵심: 양끝맞춤 텍스트 쫘아악! ★ */
+            text-align: justify;
             word-break: break-all;
-            white-space: pre-wrap;
-            transition: transform 0.3s;
-            box-sizing: border-box;
-            /* 가끔 큰 타일 만들기 (랜덤하게 자바스크립트로 조절할 것) */
-            grid-column: span 1;
-            grid-row: span 1;
+            line-height: 1.7;
         }
 
         .text-tile:hover {
-            transform: scale(1.03) rotate(1deg); /* 마우스 올리면 살짝 커지고 회전 */
-            z-index: 10;
+            transform: scale(1.02) rotate(1deg); /* 마우스 올리면 살짝 튀어오름 */
         }
 
         /* 돌아가기 버튼 */
         .back-btn {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: rgba(255,255,255,0.8);
+            bottom: 30px;
+            right: 30px;
+            background-color: rgba(255, 255, 255, 0.9);
             color: #333;
             text-decoration: none;
-            padding: 10px 20px;
-            border-radius: 20px;
+            padding: 12px 24px;
+            border-radius: 30px;
             font-weight: bold;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-            z-index: 100;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transition: background 0.2s;
+            z-index: 1000;
+        }
+        .back-btn:hover { background-color: #fff; }
+        
+        #loading {
+            color: white;
+            text-align: center;
+            font-size: 1.2rem;
+            margin-top: 50px;
         }
     </style>
 </head>
 <body>
 
-    <h1>축적</h1>
-    <div id="gallery-container">데이터를 불러오는 중입니다...</div>
-    
-    <a href="index.html" class="back-btn">⬅ 목록으로 돌아가기</a>
+    <div id="loading">기록의 파편들을 모으는 중입니다...</div>
+    <div id="gallery-container" class="masonry-grid"></div>
+
+    <a href="index.html" class="back-btn">⬅ 돌아가기</a>
 
     <script>
-        // 앱스 스크립트 API 주소 (동일하게 사용)
         const scriptUrl = "https://script.google.com/macros/s/AKfycbzd77E3TuZzFoxsN9C5W0ZIYscV3NEsndO-mhel9JZPNap6sS4_O7wDpc9rz8gmcEu-/exec";
         const container = document.getElementById('gallery-container');
+        const loading = document.getElementById('loading');
 
-        // ★ 설정: 사용할 랜덤 폰트 리스트 (구글 폰트 명칭)
+        // 사용할 구글 폰트 목록
         const fontList = [
-            "'Gaegu', cursive",
-            "'Gamja Flower', cursive",
-            "'Nanum Myeongjo', serif",
-            "'Song Myung', serif",
-            "serif",
-            "monospace"
+            "'Nanum Myeongjo', serif", // 명조체
+            "'Gaegu', cursive",        // 귀여운 손글씨 1
+            "'Dongle', sans-serif",    // 동글동글 폰트
+            "'Gowun Dodum', sans-serif", // 고운 돋움체
+            "'Hi Melody', cursive"     // 귀여운 손글씨 2
         ];
 
-        // ★ 랜덤 색상 생성기 (너무 하얗거나 칙칙하지 않게 범위 조절)
-        // 텍스트는 흰색으로 고정할 거라, 배경색은 중간 톤의 파스텔~원색 계열로 잡음
+        // 칙칙하거나 너무 하얗지 않은 랜덤 파스텔~원색 추출 함수
         function getRandomColor() {
-            // HSL 색상 공간 사용 (색상, 채도, 명도)
-            const h = Math.floor(Math.random() * 360); // 0~360도 색상 전체
-            const s = Math.floor(Math.random() * 50) + 40; // 채도: 40~90% (칙칙하지 않게)
-            const l = Math.floor(Math.random() * 30) + 40; // 명도: 40~70% (너무 하얗거나 어둡지 않게)
+            const h = Math.floor(Math.random() * 360); // 색상 전체 범위
+            const s = Math.floor(Math.random() * 40) + 40; // 채도: 40~80% (탁하지 않게)
+            const l = Math.floor(Math.random() * 30) + 55; // 밝기: 55~85% (너무 어둡거나 눈부시지 않게)
             return `hsl(${h}, ${s}%, ${l}%)`;
         }
 
-        // 배열 순서 섞기 (피셔-예이츠 셔플)
+        // 배열 순서 섞기 (매번 다르게 배치)
         function shuffleArray(array) {
             for (let i = array.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -107,44 +106,42 @@
             }
         }
 
-        function loadRandomGallery() {
-            container.innerHTML = "감성을 불러오는 중...";
-            
-            fetch(scriptUrl)
-                .then(res => res.json())
-                .then(data => {
-                    if (data.length === 0) {
-                        container.innerHTML = "기록이 없습니다.";
-                        return;
-                    }
+        fetch(scriptUrl)
+            .then(res => res.json())
+            .then(data => {
+                loading.style.display = 'none';
 
-                    // 순서를 랜덤하게 섞음 (매번 방문할 때마다 배치가 달라짐)
-                    shuffleArray(data);
+                if (data.length === 0) {
+                    container.innerHTML = "<div style='color:white;text-align:center;'>아직 작성된 기록이 없습니다.</div>";
+                    return;
+                }
 
-                    let html = '';
-                    data.forEach(item => {
-                        const safeContent = item.content.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-                        
-                        // 랜덤 속성 적용
-                        const bgColor = getRandomColor();
-                        const font = fontList[Math.floor(Math.random() * fontList.length)];
-                        // 가끔 텍스트 크기 키움 (랜덤)
-                        const fontSize = Math.random() > 0.8 ? '1.4rem' : '1rem';
-                        // 가끔 타일 크기 키움 (격자 꽉 차게 하기 위해)
-                        const spanStyle = Math.random() > 0.85 ? 'grid-column: span 2; grid-row: span 2;' : '';
+                // 순서 섞기
+                shuffleArray(data);
 
-                        html += `
-                            <div class="text-tile" style="background-color: ${bgColor}; font-family: ${font}; font-size: ${fontSize}; ${spanStyle}">
-                                ${safeContent}
-                            </div>
-                        `;
-                    });
-                    container.innerHTML = html;
-                })
-                .catch(err => container.innerHTML = "오류.");
-        }
+                let html = '';
+                data.forEach(item => {
+                    // XSS 공격 방지를 위한 이스케이프 처리 후 줄바꿈 살리기
+                    let safeContent = item.content.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                    
+                    // 각각의 텍스트 덩어리에 랜덤 속성 부여
+                    const bgColor = getRandomColor();
+                    const font = fontList[Math.floor(Math.random() * fontList.length)];
+                    const fontSize = Math.random() > 0.7 ? '1.3rem' : '1.05rem'; // 간혹 글씨를 크게 키움
 
-        loadRandomGallery();
+                    html += `
+                        <div class="text-tile" style="background-color: ${bgColor}; font-family: ${font}; font-size: ${fontSize};">
+                            ${safeContent}
+                        </div>
+                    `;
+                });
+                
+                container.innerHTML = html;
+            })
+            .catch(error => {
+                loading.innerText = "데이터를 불러오는 데 실패했습니다.";
+                console.error("Error:", error);
+            });
     </script>
 </body>
 </html>
