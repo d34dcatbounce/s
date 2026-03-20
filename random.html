@@ -3,38 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>모으는 일은 아름다워</title>
-    <link href="https://fonts.googleapis.com/css2?family=Dongle&family=Gaegu&family=Gowun+Dodum&family=Hi+Melody&family=Nanum+Myeongjo&display=swap" rel="stylesheet">
+    <title>랜덤 감성 아카이브</title>
+    <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Nanum+Myeongjo&family=Noto+Sans+KR:wght@400;500&family=Noto+Serif+KR:wght@400;500&display=swap" rel="stylesheet">
     <style>
         body {
             margin: 0;
             padding: 20px;
-            background-color: #121212; /* 전체 배경은 딥 다크 */
-            font-family: -apple-system, sans-serif;
+            background-color: #121212; 
+            font-family: 'Noto Sans KR', sans-serif;
         }
 
-        /* 핀터레스트처럼 벽돌 쌓는 레이아웃 */
         .masonry-grid {
-            column-count: 2; /* 모바일: 2열 */
-            column-gap: 20px; /* 가로 여백 */
+            column-count: 2; 
+            column-gap: 20px; 
         }
 
         @media (min-width: 600px) { .masonry-grid { column-count: 3; } }
         @media (min-width: 900px) { .masonry-grid { column-count: 4; } }
 
-        /* 배경 없는 순수 텍스트 타일 */
         .text-tile {
             break-inside: avoid;
-            margin-bottom: 35px; /* 세로 여백을 조금 더 줌 */
+            margin-bottom: 35px; 
             transition: transform 0.3s ease;
-            
-            /* 양끝맞춤 텍스트 */
             text-align: justify;
             word-break: break-all;
             line-height: 1.6;
         }
 
-        /* 클릭 가능한 토글 버튼 (...) */
         .action-btn {
             cursor: pointer;
             opacity: 0.5;
@@ -48,7 +43,6 @@
             opacity: 1;
         }
 
-        /* 돌아가기 버튼 */
         .back-btn {
             position: fixed;
             bottom: 30px;
@@ -72,20 +66,20 @@
             margin-top: 50px;
         }
 
-        /* ★ 넓게 펼쳐지는 모달(팝업) 창 스타일 */
+        /* 넓게 펼쳐지는 모달(팝업) 창 스타일 */
         .modal-overlay {
             display: none;
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(18, 18, 18, 0.85); /* 반투명 어두운 배경 */
+            background: rgba(18, 18, 18, 0.85); 
             z-index: 2000;
             justify-content: center;
             align-items: center;
-            backdrop-filter: blur(5px); /* 뒤에 있는 글자들 예쁘게 흐림 처리 */
+            backdrop-filter: blur(5px); 
         }
 
         .modal-content {
-            width: 90%; /* 모바일에서 가로폭을 시원하게 씀 */
+            width: 90%; 
             max-width: 650px;
             max-height: 80vh;
             overflow-y: auto;
@@ -93,7 +87,6 @@
             text-align: justify;
             line-height: 1.8;
             word-break: break-all;
-            /* 스크롤바 숨기기 (감성 유지) */
             scrollbar-width: none; 
         }
         .modal-content::-webkit-scrollbar { display: none; }
@@ -129,12 +122,13 @@
         const container = document.getElementById('gallery-container');
         const loading = document.getElementById('loading');
 
+        // ★ 정갈하고 가독성 높은 폰트 리스트로 교체
         const fontList = [
-            "'Nanum Myeongjo', serif", 
-            "'Gaegu', cursive",        
-            "'Dongle', sans-serif",    
-            "'Gowun Dodum', sans-serif", 
-            "'Hi Melody', cursive"     
+            "'Noto Sans KR', sans-serif",   // 깔끔한 기본 고딕
+            "'Noto Serif KR', serif",       // 세련된 기본 명조
+            "'Nanum Myeongjo', serif",      // 부드러운 나눔명조
+            "'Gowun Dodum', sans-serif",    // 단정하고 따뜻한 고운돋움
+            "'Gungsuh', '궁서', serif"        // 진지함의 끝판왕 궁서체
         ];
 
         function getRandomTextColor() {
@@ -161,10 +155,8 @@
             return sub;
         }
 
-        // ★ '...'을 누르면 모달 창을 열어주는 함수
         window.openModal = function(btn) {
             const tile = btn.closest('.text-tile');
-            // 숨겨둔 전체 텍스트 내용과 폰트, 색상 정보를 가져옴
             const fullText = tile.querySelector('.full-view').innerHTML;
             const font = tile.style.fontFamily;
             const color = tile.style.color;
@@ -172,16 +164,14 @@
             const modal = document.getElementById('textModal');
             const modalBody = document.getElementById('modalBody');
 
-            // 팝업 창에 내용과 스타일을 똑같이 적용
             modalBody.innerHTML = fullText;
             modalBody.style.fontFamily = font;
             modalBody.style.color = color;
-            modalBody.style.fontSize = "1.25rem"; // 읽기 편하게 글자 크기 조금 키움
+            modalBody.style.fontSize = "1.25rem"; 
 
-            modal.style.display = 'flex'; // 모달 띄우기
+            modal.style.display = 'flex'; 
         };
 
-        // ★ 모달 창 닫기 함수
         window.closeModal = function(e) {
             if(e) e.stopPropagation();
             document.getElementById('textModal').style.display = 'none';
@@ -208,7 +198,6 @@
                     const font = fontList[Math.floor(Math.random() * fontList.length)];
                     const fontSize = Math.random() > 0.8 ? '1.15rem' : '0.95rem'; 
 
-                    // ★ 분량 3배 증가: 약 210자 내외로 컷
                     const limit = 210; 
                     const isLong = safeContent.length > limit;
 
@@ -222,7 +211,6 @@
                             <span class="full-view" style="display:none;">${safeContent}</span>
                         `;
                     } else {
-                        // 짧은 글은 그대로 표시 (클릭할 필요 없음)
                         contentHtml = `
                             <span class="short-view">${safeContent}</span>
                             <span class="full-view" style="display:none;">${safeContent}</span>
