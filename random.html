@@ -3,46 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>무한히 쌓으면 무한히 커진다</title>
+    <title>꾸준함을 모으면 아름답다</title>
     <link href="https://fonts.googleapis.com/css2?family=Dongle&family=Gaegu&family=Gowun+Dodum&family=Hi+Melody&family=Nanum+Myeongjo&display=swap" rel="stylesheet">
     <style>
         body {
             margin: 0;
-            padding: 15px;
+            padding: 20px;
             background-color: #121212; /* 전체 배경은 딥 다크 */
             font-family: -apple-system, sans-serif;
         }
 
         /* 핀터레스트처럼 벽돌 쌓는 레이아웃 */
         .masonry-grid {
-            /* ★ 모바일 기본값을 2열(2 columns)로 변경! */
-            column-count: 2; 
-            column-gap: 12px;
+            column-count: 2; /* 모바일: 2열 */
+            column-gap: 20px; /* 글 덩어리 사이 가로 여백 */
         }
 
-        /* 화면이 넓어지면 단 수를 더 늘림 */
         @media (min-width: 600px) { .masonry-grid { column-count: 3; } }
         @media (min-width: 900px) { .masonry-grid { column-count: 4; } }
 
-        /* 각각의 텍스트 조각 타일 (블록) */
+        /* ★ 배경 없는 순수 텍스트 타일 */
         .text-tile {
-            break-inside: avoid; /* 타일이 단 중간에 잘리지 않도록 보호 */
-            margin-bottom: 12px;
-            padding: 16px;
-            /* ★ 배경색은 차분한 다크 그레이로 고정 */
-            background-color: #1e1e1e; 
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            break-inside: avoid;
+            margin-bottom: 30px; /* 글 덩어리 사이 세로 여백 */
             transition: transform 0.3s ease;
             
-            /* 양끝맞춤 텍스트 쫘아악! */
+            /* 양끝맞춤 텍스트 */
             text-align: justify;
             word-break: break-all;
             line-height: 1.6;
         }
 
-        .text-tile:hover {
-            transform: scale(1.02); /* 마우스 올리면 살짝 튀어오름 */
+        /* 클릭 가능한 토글 버튼 (..., <접기>) 스타일 */
+        .action-btn {
+            cursor: pointer;
+            opacity: 0.6; /* 살짝 투명하게 해서 본문과 차이 둠 */
+            font-weight: bold;
+            display: inline-block;
+            margin-left: 4px;
+            transition: opacity 0.2s;
+        }
+
+        .action-btn:hover {
+            opacity: 1;
+            text-decoration: underline;
         }
 
         /* 돌아가기 버튼 */
@@ -72,7 +76,7 @@
 </head>
 <body>
 
-    <div id="loading">로딩중...</div>
+    <div id="loading">수집 중...</div>
     <div id="gallery-container" class="masonry-grid"></div>
 
     <a href="index.html" class="back-btn">⬅ 돌아가기</a>
@@ -82,7 +86,6 @@
         const container = document.getElementById('gallery-container');
         const loading = document.getElementById('loading');
 
-        // 사용할 구글 폰트 목록
         const fontList = [
             "'Nanum Myeongjo', serif", 
             "'Gaegu', cursive",        
@@ -91,21 +94,46 @@
             "'Hi Melody', cursive"     
         ];
 
-        // ★ 어두운 배경에 어울리는 밝고 화사한 랜덤 글자색 추출
+        // 화사한 랜덤 글자색
         function getRandomTextColor() {
-            const h = Math.floor(Math.random() * 360); // 색상 전체 범위
-            const s = Math.floor(Math.random() * 50) + 50; // 채도: 50~100% (선명하게)
-            const l = Math.floor(Math.random() * 30) + 60; // 밝기: 60~90% (어두운 배경에서 잘 보이게 밝게)
+            const h = Math.floor(Math.random() * 360); 
+            const s = Math.floor(Math.random() * 50) + 50; 
+            const l = Math.floor(Math.random() * 30) + 60; 
             return `hsl(${h}, ${s}%, ${l}%)`;
         }
 
-        // 배열 순서 섞기 (매번 다르게 배치)
         function shuffleArray(array) {
             for (let i = array.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [array[i], array[j]] = [array[j], array[i]];
             }
         }
+
+        // HTML 특수기호(&lt;, &gt;) 중간에 잘리지 않게 안전하게 자르는 함수
+        function getSafeShortText(text, maxLen) {
+            if (text.length <= maxLen) return text;
+            let sub = text.substring(0, maxLen);
+            let lastAmp = sub.lastIndexOf('&');
+            if (lastAmp !== -1 && maxLen - lastAmp < 5) {
+                sub = sub.substring(0, lastAmp);
+            }
+            return sub;
+        }
+
+        // 펼치기/접기 작동 함수
+        window.toggleText = function(btn, isExpand) {
+            const tile = btn.closest('.text-tile');
+            const shortView = tile.querySelector('.short-view');
+            const fullView = tile.querySelector('.full-view');
+            
+            if (isExpand) {
+                shortView.style.display = 'none';
+                fullView.style.display = 'inline';
+            } else {
+                shortView.style.display = 'inline';
+                fullView.style.display = 'none';
+            }
+        };
 
         fetch(scriptUrl)
             .then(res => res.json())
@@ -117,26 +145,40 @@
                     return;
                 }
 
-                // 순서 섞기
                 shuffleArray(data);
 
                 let html = '';
                 data.forEach(item => {
-                    // 메인 화면과 동일하게 문자열 안전 변환 (에러 방지)
                     let safeContent = String(item.content || "").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-                    if (!safeContent.trim()) return; // 내용이 아예 없으면 패스
+                    if (!safeContent.trim()) return; 
                     
-                    // 각각의 텍스트 덩어리에 랜덤 속성 부여
                     const textColor = getRandomTextColor();
                     const font = fontList[Math.floor(Math.random() * fontList.length)];
-                    
-                    // 모바일 2열이라 공간이 좁으므로 폰트 크기를 살짝 줄임
-                    const fontSize = Math.random() > 0.8 ? '1.1rem' : '0.95rem'; 
+                    const fontSize = Math.random() > 0.8 ? '1.15rem' : '0.95rem'; 
 
-                    // ★ background-color 대신 color 에 랜덤 색상 적용
+                    // ★ 한 화면에 4개 정도 보이도록 글자 수를 70자 내외로 제한
+                    const limit = 70; 
+                    const isLong = safeContent.length > limit;
+
+                    let contentHtml = '';
+                    if (isLong) {
+                        const shortText = getSafeShortText(safeContent, limit);
+                        contentHtml = `
+                            <span class="short-view">
+                                ${shortText}<span class="action-btn" onclick="toggleText(this, true)">...</span>
+                            </span>
+                            <span class="full-view" style="display:none;">
+                                ${safeContent} <span class="action-btn" onclick="toggleText(this, false)">&lt;접기&gt;</span>
+                            </span>
+                        `;
+                    } else {
+                        // 짧은 글은 그대로 표시
+                        contentHtml = `<span class="short-view">${safeContent}</span>`;
+                    }
+
                     html += `
                         <div class="text-tile" style="color: ${textColor}; font-family: ${font}; font-size: ${fontSize};">
-                            ${safeContent}
+                            ${contentHtml}
                         </div>
                     `;
                 });
