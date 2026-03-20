@@ -3,68 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>축적</title>
+    <title>무한히 쌓으면 무한히 커진다</title>
     <link href="https://fonts.googleapis.com/css2?family=Dongle&family=Gaegu&family=Gowun+Dodum&family=Hi+Melody&family=Nanum+Myeongjo&display=swap" rel="stylesheet">
     <style>
         body {
             margin: 0;
-            padding: 30px;
-            background-color: #1a1a1a; /* 살짝 어두운 배경으로 컬러풀한 타일이 돋보이게 */
+            padding: 15px;
+            background-color: #121212; /* 전체 배경은 딥 다크 */
             font-family: -apple-system, sans-serif;
         }
 
-        /* 핀터레스트처럼 벽돌 쌓는 레이아웃 (CSS Multi-column) */
+        /* 핀터레스트처럼 벽돌 쌓는 레이아웃 */
         .masonry-grid {
-            column-count: 1; /* 모바일: 1줄 */
-            column-gap: 20px;
+            /* ★ 모바일 기본값을 2열(2 columns)로 변경! */
+            column-count: 2; 
+            column-gap: 12px;
         }
 
-        /* 화면이 넓어지면 단 수를 늘림 */
-        @media (min-width: 600px) { .masonry-grid { column-count: 2; } }
-        @media (min-width: 900px) { .masonry-grid { column-count: 3; } }
-        @media (min-width: 1200px) { .masonry-grid { column-count: 4; } }
+        /* 화면이 넓어지면 단 수를 더 늘림 */
+        @media (min-width: 600px) { .masonry-grid { column-count: 3; } }
+        @media (min-width: 900px) { .masonry-grid { column-count: 4; } }
 
-        /* 각각의 텍스트 조각 타일 */
+        /* 각각의 텍스트 조각 타일 (블록) */
         .text-tile {
             break-inside: avoid; /* 타일이 단 중간에 잘리지 않도록 보호 */
-            margin-bottom: 20px;
-            padding: 25px;
+            margin-bottom: 12px;
+            padding: 16px;
+            /* ★ 배경색은 차분한 다크 그레이로 고정 */
+            background-color: #1e1e1e; 
             border-radius: 12px;
-            color: #111; /* 글자는 진한 먹색 */
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
             transition: transform 0.3s ease;
             
-            /* ★ 핵심: 양끝맞춤 텍스트 쫘아악! ★ */
+            /* 양끝맞춤 텍스트 쫘아악! */
             text-align: justify;
             word-break: break-all;
-            line-height: 1.7;
+            line-height: 1.6;
         }
 
         .text-tile:hover {
-            transform: scale(1.02) rotate(1deg); /* 마우스 올리면 살짝 튀어오름 */
+            transform: scale(1.02); /* 마우스 올리면 살짝 튀어오름 */
         }
 
         /* 돌아가기 버튼 */
         .back-btn {
             position: fixed;
             bottom: 30px;
-            right: 30px;
+            right: 20px;
             background-color: rgba(255, 255, 255, 0.9);
-            color: #333;
+            color: #111;
             text-decoration: none;
-            padding: 12px 24px;
+            padding: 12px 20px;
             border-radius: 30px;
             font-weight: bold;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
             transition: background 0.2s;
             z-index: 1000;
         }
         .back-btn:hover { background-color: #fff; }
         
         #loading {
-            color: white;
+            color: #888;
             text-align: center;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             margin-top: 50px;
         }
     </style>
@@ -83,18 +84,18 @@
 
         // 사용할 구글 폰트 목록
         const fontList = [
-            "'Nanum Myeongjo', serif", // 명조체
-            "'Gaegu', cursive",        // 귀여운 손글씨 1
-            "'Dongle', sans-serif",    // 동글동글 폰트
-            "'Gowun Dodum', sans-serif", // 고운 돋움체
-            "'Hi Melody', cursive"     // 귀여운 손글씨 2
+            "'Nanum Myeongjo', serif", 
+            "'Gaegu', cursive",        
+            "'Dongle', sans-serif",    
+            "'Gowun Dodum', sans-serif", 
+            "'Hi Melody', cursive"     
         ];
 
-        // 칙칙하거나 너무 하얗지 않은 랜덤 파스텔~원색 추출 함수
-        function getRandomColor() {
+        // ★ 어두운 배경에 어울리는 밝고 화사한 랜덤 글자색 추출
+        function getRandomTextColor() {
             const h = Math.floor(Math.random() * 360); // 색상 전체 범위
-            const s = Math.floor(Math.random() * 40) + 40; // 채도: 40~80% (탁하지 않게)
-            const l = Math.floor(Math.random() * 30) + 55; // 밝기: 55~85% (너무 어둡거나 눈부시지 않게)
+            const s = Math.floor(Math.random() * 50) + 50; // 채도: 50~100% (선명하게)
+            const l = Math.floor(Math.random() * 30) + 60; // 밝기: 60~90% (어두운 배경에서 잘 보이게 밝게)
             return `hsl(${h}, ${s}%, ${l}%)`;
         }
 
@@ -112,7 +113,7 @@
                 loading.style.display = 'none';
 
                 if (data.length === 0) {
-                    container.innerHTML = "<div style='color:white;text-align:center;'>아직 작성된 기록이 없습니다.</div>";
+                    container.innerHTML = "<div style='color:#888;text-align:center;'>아직 작성된 기록이 없습니다.</div>";
                     return;
                 }
 
@@ -121,16 +122,20 @@
 
                 let html = '';
                 data.forEach(item => {
-                    // XSS 공격 방지를 위한 이스케이프 처리 후 줄바꿈 살리기
-                    let safeContent = item.content.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                    // 메인 화면과 동일하게 문자열 안전 변환 (에러 방지)
+                    let safeContent = String(item.content || "").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                    if (!safeContent.trim()) return; // 내용이 아예 없으면 패스
                     
                     // 각각의 텍스트 덩어리에 랜덤 속성 부여
-                    const bgColor = getRandomColor();
+                    const textColor = getRandomTextColor();
                     const font = fontList[Math.floor(Math.random() * fontList.length)];
-                    const fontSize = Math.random() > 0.7 ? '1.3rem' : '1.05rem'; // 간혹 글씨를 크게 키움
+                    
+                    // 모바일 2열이라 공간이 좁으므로 폰트 크기를 살짝 줄임
+                    const fontSize = Math.random() > 0.8 ? '1.1rem' : '0.95rem'; 
 
+                    // ★ background-color 대신 color 에 랜덤 색상 적용
                     html += `
-                        <div class="text-tile" style="background-color: ${bgColor}; font-family: ${font}; font-size: ${fontSize};">
+                        <div class="text-tile" style="color: ${textColor}; font-family: ${font}; font-size: ${fontSize};">
                             ${safeContent}
                         </div>
                     `;
