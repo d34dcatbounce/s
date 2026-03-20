@@ -3,315 +3,237 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>데이터 입력 및 목록 (자체 DB)</title>
+    <title>나의 글 아카이브</title>
     <style>
+        /* 기본 스타일 */
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             margin: 0;
-            padding: 15px;
-            background-color: #f4f7f6;
-            color: #333;
+            padding: 20px;
+            background-color: #f0f2f5;
+            color: #1c1e21;
         }
         
         .container {
+            max-width: 1200px;
+            margin: 0 auto;
             display: flex;
             flex-direction: column;
             gap: 20px;
-            max-width: 1000px;
-            margin: 0 auto;
         }
 
-        @media (min-width: 768px) {
-            .container {
-                flex-direction: row;
-            }
-            .left-panel, .right-panel {
-                flex: 1;
-            }
-        }
-
-        .left-panel, .right-panel {
+        /* 입력 폼 스타일 (메인 상단에 배치) */
+        .input-panel {
             background: white;
             padding: 20px;
             border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         h2 {
             margin-top: 0;
-            font-size: 1.2rem;
-            border-bottom: 2px solid #2c3e50;
+            font-size: 1.3rem;
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
             padding-bottom: 10px;
             margin-bottom: 15px;
         }
 
-        /* 왼쪽 리스트 영역 스타일 */
-        #list-container {
-            max-height: 600px;
-            overflow-y: auto;
-        }
-        
-        details {
-            background: #fff;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            padding: 12px 15px;
-            transition: all 0.2s ease;
-            position: relative;
-        }
-        
-        summary {
-            font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            list-style: none;
-            outline: none;
-            word-break: keep-all;
-            padding-right: 60px; /* 삭제 버튼 공간 확보 */
-        }
-        
-        summary::-webkit-details-marker {
-            display: none;
-        }
-        
-        summary::before {
-            content: "➕ ";
-            font-size: 0.8em;
-            margin-right: 5px;
-        }
-        
-        details[open] summary::before {
-            content: "➖ ";
-        }
-        
-        .content-body {
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px dashed #cbd5e1;
-            color: #475569;
-            line-height: 1.6;
-            font-size: 0.95rem;
-            white-space: pre-wrap;
-        }
-
-        /* ★ 삭제 버튼 스타일 */
-        .delete-btn {
-            position: absolute;
-            top: 12px;
-            right: 15px;
-            background-color: #ff4757;
-            color: white;
-            border: none;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-
-        .delete-btn:hover {
-            background-color: #ff6b81;
-        }
-
-        /* 오른쪽 자체 입력 폼 스타일 */
         .custom-form {
             display: flex;
             flex-direction: column;
-            gap: 15px;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-        .form-group label {
-            font-weight: 600;
-            font-size: 0.9rem;
-            color: #475569;
+            gap: 10px;
         }
 
         .custom-form input, .custom-form textarea {
             width: 100%;
             padding: 12px;
-            border: 1px solid #cbd5e1;
+            border: 1px solid #ddd;
             border-radius: 8px;
             font-size: 1rem;
-            font-family: inherit;
             box-sizing: border-box;
-            transition: border-color 0.2s;
-        }
-
-        .custom-form input:focus, .custom-form textarea:focus {
-            outline: none;
-            border-color: #2c3e50;
         }
 
         .custom-form textarea {
-            height: 200px;
+            height: 100px; /* 입력창 높이 줄임 */
             resize: vertical;
         }
 
         .submit-btn {
-            background-color: #2c3e50;
+            background-color: #3498db;
             color: white;
             border: none;
-            padding: 14px;
+            padding: 12px;
             border-radius: 8px;
             font-size: 1rem;
-            font-weight: 600;
+            font-weight: bold;
             cursor: pointer;
             transition: background-color 0.2s;
         }
 
         .submit-btn:hover {
-            background-color: #1a252f;
+            background-color: #2980b9;
         }
-        
-        .submit-btn:disabled {
-            background-color: #95a5a6;
-            cursor: not-allowed;
+
+        /* ★★★ [변경됨] 목록 그리드 스타일 (양끝맞춤 사각형 타일) ★★★ */
+        #list-container {
+            display: grid;
+            /* 모바일: 1줄에 1개, 태블릿: 2개, PC: 3개 자동 조절 */
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+        }
+
+        .post-tile {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.2s;
+        }
+
+        .post-tile:hover {
+            transform: translateY(-3px); /* 마우스 올리면 살짝 뜸 */
+        }
+
+        .post-title {
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            color: #333;
+            word-break: break-all;
+        }
+
+        .post-body {
+            font-size: 0.95rem;
+            color: #555;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            /* ★ 핵심: 양끝맞춤 ★ */
+            text-align: justify;
+            /* 너무 길면 줄임표 처리 (CSS 3줄 제한 눈속임) */
+            display: -webkit-box;
+            -webkit-line-clamp: 6; /* 6줄까지 보여줌 */
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* 작은 삭제 버튼 */
+        .delete-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: rgba(255, 71, 87, 0.1);
+            color: #ff4757;
+            border: none;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            cursor: pointer;
+        }
+        .delete-btn:hover {
+            background-color: #ff4757;
+            color: white;
+        }
+
+        /* 랜덤 페이지 이동 버튼 */
+        .go-random-btn {
+            display: block;
+            text-align: center;
+            background-color: #2c3e50;
+            color: white;
+            text-decoration: none;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 30px;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <div class="left-panel">
-            <h2>목록 (List)</h2>
-            <div id="list-container">데이터를 불러오는 중입니다...</div>
-        </div>
-
-        <div class="right-panel">
-            <h2>입력 (Input)</h2>
-            
+        <div class="input-panel">
+            <h2>글 쓰기</h2>
             <form class="custom-form" id="myForm">
-                <div class="form-group">
-                    <label for="title">제목</label>
-                    <input type="text" id="title" required placeholder="제목을 입력하세요">
-                </div>
-                
-                <div class="form-group">
-                    <label for="content">본문</label>
-                    <textarea id="content" required placeholder="내용을 입력하세요"></textarea>
-                </div>
-                
-                <button type="submit" id="submitBtn" class="submit-btn">제출하기</button>
+                <input type="text" id="title" required placeholder="제목">
+                <textarea id="content" required placeholder="오늘의 생각..."></textarea>
+                <button type="submit" id="submitBtn" class="submit-btn">기록하기</button>
             </form>
         </div>
+
+        <h2>나의 기록들</h2>
+        <div id="list-container">데이터를 불러오는 중입니다...</div>
+        
+        <a href="random.html" class="go-random-btn">랜덤 감성 페이지 보러가기 👉</a>
     </div>
 
     <script>
-        // 발급받으신 앱스 스크립트 API 주소
+        // 앱스 스크립트 API 주소 (본인 주소 그대로 사용)
         const scriptUrl = "https://script.google.com/macros/s/AKfycbzd77E3TuZzFoxsN9C5W0ZIYscV3NEsndO-mhel9JZPNap6sS4_O7wDpc9rz8gmcEu-/exec";
         const listContainer = document.getElementById('list-container');
         const myForm = document.getElementById('myForm');
         const submitBtn = document.getElementById('submitBtn');
 
-        // 1. 데이터 불러오기 함수 (Read)
         function loadData() {
             listContainer.innerHTML = "데이터를 불러오는 중입니다...";
-            
             fetch(scriptUrl)
                 .then(res => res.json())
                 .then(data => {
                     if (data.length === 0) {
-                        listContainer.innerHTML = "아직 입력된 데이터가 없습니다.";
+                        listContainer.innerHTML = "아직 기록이 없습니다.";
                         return;
                     }
-
                     let html = '';
-                    // 최신 글이 위로 오도록 역순 출력
+                    // 최신순
                     for (let i = data.length - 1; i >= 0; i--) {
                         const item = data[i];
                         const safeTitle = item.title.replace(/</g, "&lt;").replace(/>/g, "&gt;");
                         const safeContent = item.content.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-                        
                         html += `
-                            <details>
-                                <summary>${safeTitle}</summary>
-                                <button class="delete-btn" onclick="deleteData('${item.id}')">삭제</button>
-                                <div class="content-body">${safeContent}</div>
-                            </details>
+                            <div class="post-tile">
+                                <button class="delete-btn" onclick="deleteData('${item.id}')">X</button>
+                                <div class="post-title">${safeTitle}</div>
+                                <div class="post-body">${safeContent}</div>
+                            </div>
                         `;
                     }
                     listContainer.innerHTML = html;
                 })
-                .catch(error => {
-                    listContainer.innerHTML = "데이터를 불러오지 못했습니다.";
-                    console.error("Error:", error);
-                });
+                .catch(err => listContainer.innerHTML = "오류 발생.");
         }
 
-        // 2. 데이터 제출하기 (Create)
         myForm.addEventListener('submit', function(e) {
-            e.preventDefault(); // 페이지 새로고침 방지
-            
-            const titleVal = document.getElementById('title').value;
-            const contentVal = document.getElementById('content').value;
-            
-            // 버튼 상태 변경
+            e.preventDefault();
             submitBtn.innerText = "저장 중...";
             submitBtn.disabled = true;
-
-            // 서버로 보낼 데이터 묶기
             const formData = new URLSearchParams();
             formData.append('action', 'insert');
-            formData.append('title', titleVal);
-            formData.append('content', contentVal);
-
-            fetch(scriptUrl, {
-                method: 'POST',
-                body: formData
-            })
+            formData.append('title', document.getElementById('title').value);
+            formData.append('content', document.getElementById('content').value);
+            fetch(scriptUrl, { method: 'POST', body: formData })
             .then(() => {
-                alert("성공적으로 등록되었습니다.");
-                myForm.reset(); // 입력칸 비우기
-                loadData(); // 목록 새로고침
-            })
-            .catch(error => {
-                alert("등록 중 오류가 발생했습니다.");
-                console.error("Error:", error);
-            })
-            .finally(() => {
-                // 버튼 상태 복구
-                submitBtn.innerText = "제출하기";
+                alert("등록됨!");
+                myForm.reset();
+                loadData();
+            }).finally(() => {
+                submitBtn.innerText = "기록하기";
                 submitBtn.disabled = false;
             });
         });
 
-        // 3. 데이터 삭제하기 (Delete)
         function deleteData(id) {
-            if (!confirm("정말 이 글을 삭제하시겠습니까?")) return;
-
-            // 삭제 중 표시 (해당 버튼 텍스트 변경)
-            event.target.innerText = "삭제 중...";
-            event.target.disabled = true;
-
+            if (!confirm("삭제할까요?")) return;
+            event.target.innerText = "..";
             const formData = new URLSearchParams();
             formData.append('action', 'delete');
             formData.append('id', id);
-
-            fetch(scriptUrl, {
-                method: 'POST',
-                body: formData
-            })
-            .then(() => {
-                alert("삭제되었습니다.");
-                loadData(); // 목록 새로고침
-            })
-            .catch(error => {
-                alert("삭제 중 오류가 발생했습니다.");
-                console.error("Error:", error);
-                loadData(); // 실패해도 일단 목록 새로고침
-            });
+            fetch(scriptUrl, { method: 'POST', body: formData })
+            .then(() => loadData());
         }
-
-        // 페이지가 열리면 즉시 데이터 불러오기 실행
         loadData();
     </script>
-
 </body>
 </html>
